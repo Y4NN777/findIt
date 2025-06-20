@@ -223,7 +223,7 @@ SECRET_KEY=votre_clé_secrète_très_longue_et_sécurisée
 FLASK_ENV=production
 ```
 
-#### Plateformes de déploiement recommandées :
+#### Plateformes de déploiement envisagees :
 - **Railway** - Déploiement simple avec base SQLite
 - **Render** - Support gratuit avec base PostgreSQL
 - **Heroku** - Plateforme mature avec add-ons
