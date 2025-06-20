@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Dashboard Header with proper spacing -->
+<div class="section dashboard-header">
+    <h2><i class="fas fa-tachometer-alt"></i> Mon Tableau de Bord</h2>
+    <p>Gérez vos objets perdus et retrouvés</p>
+    <p><i class="fas fa-user"></i> Ravi de vous revoir, <strong>{{ session.get('username', 'Utilisateur') }}</strong> !</p>
+</div>
+
+<!-- Stats Grid with consistent spacing -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <i class="fas fa-minus-circle"></i>
+        <h3>{{ user_lost_items|length }}</h3>
+        <p>Objets Perdus</p>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-plus-circle"></i>
+        <h3>{{ user_found_items|length }}</h3>
+        <p>Objets Retrouvés</p>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-check-circle"></i>
+        <h3>0</h3>
+        <p>Résolus</p>
+    </div>
+</div>
+
+<!-- Lost Items Section -->
+<div class="section">
+    <div class="section-header">
+        <div class="header-left">
+            <h3><i class="fas fa-minus-circle"></i> Mes Objets Perdus</h3>
+        </div>
+        <div class="header-right">
+            <a href="{{ url_for('lost') }}" class="btn btn-warning btn-sm">
+                <i class="fas fa-plus"></i> Déclarer un Objet Perdu
+            </a>
+        </div>
+    </div>
+
+    {% if user_lost_items %}
+        <div class="items-table">
+            {% for item in user_lost_items %}
+                <div class="item-row">
+                    <div class="item-info">
+                        <div class="item-main">
+                            <h4>{{ item.title }}</h4>
+                            <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                        </div>
+                        <div class="item-meta">
+                            <span class="category-badge">{{ item.category }}</span>
+                            <span class="status-badge status-{{ item.status }}">{{ item.status.title() }}</span>
+                        </div>
+                    </div>
+                    <div class="item-details">
+                        <p><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+                        <p><i class="fas fa-calendar"></i> {{ item.date_lost.strftime('%d/%m/%Y') }}</p>
+                        {% if item.reward %}
+                            <p><i class="fas fa-gift"></i> {{ item.reward }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="item-actions">
+                        <a href="{{ url_for('edit_lost', item_id=item.id) }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="{{ url_for('delete_lost', item_id=item.id) }}" class="btn btn-danger btn-sm" 
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet objet ?')">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-items">
+            <i class="fas fa-info-circle"></i>
+            <h3>Vous n'avez déclaré aucun objet perdu.</h3>
+            <a href="{{ url_for('lost') }}" class="btn btn-warning">
+                <i class="fas fa-plus"></i> Déclarer votre premier objet perdu
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Found Items Section -->
+<div class="section">
+    <div class="section-header">
+        <div class="header-left">
+            <h3><i class="fas fa-plus-circle"></i> Mes Objets Retrouvés</h3>
+        </div>
+        <div class="header-right">
+            <a href="{{ url_for('found') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> Déclarer un Objet Retrouvé
+            </a>
+        </div>
+    </div>
+
+    {% if user_found_items %}
+        <div class="items-table">
+            {% for item in user_found_items %}
+                <div class="item-row">
+                    <div class="item-info">
+                        <div class="item-main">
+                            <h4>{{ item.title }}</h4>
+                            <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                        </div>
+                        <div class="item-meta">
+                            <span class="category-badge">{{ item.category }}</span>
+                            <span class="status-badge status-{{ item.status }}">{{ item.status.title() }}</span>
+                        </div>
+                    </div>
+                    <div class="item-details">
+                        <p><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+                        <p><i class="fas fa-calendar"></i> {{ item.date_found.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    <div class="item-actions">
+                        <a href="{{ url_for('edit_found', id=item.id) }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        <a href="{{ url_for('delete_found', id=item.id) }}" class="btn btn-danger btn-sm"
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet objet ?')">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-items">
+            <i class="fas fa-info-circle"></i>
+            <h3>Vous n'avez déclaré aucun objet retrouvé.</h3>
+            <a href="{{ url_for('found') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Déclarer votre premier objet retrouvé
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Dashboard specific spacing fixes */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
+    border: 1px solid var(--primary-color);
+    text-align: center;
+}
+
+.dashboard-header h2 {
+    margin-bottom: var(--spacing-sm);
+    justify-content: center;
+}
+
+.dashboard-header p {
+    margin: var(--spacing-xs) 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.header-left h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.header-left h3 i {
+    font-size: var(--font-size-base);
+}
+
+.header-right {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Items table with perfect spacing */
+.items-table {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-md);
+    align-items: center;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.item-row:hover {
+    background-color: var(--gray-50);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.item-main h4 {
+    color: var(--gray-800);
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.item-description {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.item-meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.item-details {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+
+.item-details p {
+    margin: var(--spacing-xs) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.item-details i {
+    width: 12px;
+    font-size: var(--font-size-xs);
+    color: var(--primary-color);
+}
+
+.item-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+    }
+    
+    .item-row {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+        text-align: center;
+    }
+    
+    .item-info {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .item-actions {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

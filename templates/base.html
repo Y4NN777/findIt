@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FindIt{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🔍</text></svg>">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    
+    <!-- Meta tags for better SEO -->
+    <meta name="description" content="FindIt - Plateforme communautaire pour retrouver vos objets perdus et aider les autres à récupérer leurs biens.">
+    <meta name="keywords" content="objets perdus, objets trouvés, FindIt, retrouver, communauté">
+    <meta name="author" content="FindIt">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1><i class="fas fa-search"></i> FindIt</h1>
+            <nav>
+                <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Accueil</a>
+                {% if 'user_id' in session %}
+                    <a href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt"></i> Mon Tableau de Bord</a>
+                    <a href="{{ url_for('lost') }}"><i class="fas fa-minus-circle"></i> Déclarer Perdu</a>
+                    <a href="{{ url_for('found') }}"><i class="fas fa-plus-circle"></i> Déclarer Retrouvé</a>
+                    <a href="{{ url_for('match') }}"><i class="fas fa-link"></i> Correspondances</a>
+                    <a href="{{ url_for('resolved_matches') }}"><i class="fas fa-check-circle"></i> Résolus</a>
+                    <a href="{{ url_for('search') }}"><i class="fas fa-search"></i> Recherche</a>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion ({{ session.get('username', '') }})
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('search') }}"><i class="fas fa-search"></i> Recherche</a>
+                    <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Connexion</a>
+                    <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Inscription</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Messages Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                            {{ message }}
+                            <button class="close-flash" onclick="this.parentElement.style.display='none'">×</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer-improved">
+        <div class="footer-content">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <h3><i class="fas fa-search"></i> FindIt</h3>
+                    <p>Votre plateforme communautaire pour retrouver les objets perdus</p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Navigation</h4>
+                        <ul>
+                            <li><a href="{{ url_for('home') }}">Accueil</a></li>
+                            <li><a href="{{ url_for('search') }}">Recherche</a></li>
+                            {% if 'user_id' in session %}
+                                <li><a href="{{ url_for('dashboard') }}">Mon Compte</a></li>
+                                <li><a href="{{ url_for('match') }}">Correspondances</a></li>
+                            {% else %}
+                                <li><a href="{{ url_for('register') }}">Inscription</a></li>
+                                <li><a href="{{ url_for('login') }}">Connexion</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>Actions</h4>
+                        <ul>
+                            <li><a href="{{ url_for('lost') }}">Déclarer un objet perdu</a></li>
+                            <li><a href="{{ url_for('found') }}">Déclarer un objet trouvé</a></li>
+                            {% if 'user_id' in session %}
+                                <li><a href="{{ url_for('resolved_matches') }}">Objets résolus</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 FindIt - Outil de Gestion des Objets Perdus et Retrouvés</p>
+                <p>Développé pour aider la communauté à retrouver ses objets perdus</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(msg) {
+                msg.style.opacity = '0';
+                setTimeout(function() {
+                    msg.style.display = 'none';
+                }, 300);
+            });
+        }, 5000);
+
+        // Form validation
+        function validateForm(formId) {
+            const form = document.getElementById(formId);
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(function(field) {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                }
+            });
+
+            return isValid;
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+<style>
+
+</style>

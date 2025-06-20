@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-user-plus"></i> Inscription</h2>
+        <p>Créez votre compte pour commencer à utiliser la plateforme</p>
+    </div>
+
+    <form method="POST" class="enhanced-form" id="registerForm">
+        <div class="form-group">
+            <label for="username">Nom d'utilisateur *</label>
+            <input type="text" id="username" name="username" required 
+                   placeholder="Choisissez un nom d'utilisateur" autofocus>
+            <small class="help-text">Ce nom sera visible par les autres utilisateurs</small>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email (optionnel)</label>
+            <input type="email" id="email" name="email" 
+                   placeholder="votre@email.com">
+            <small class="help-text">Pour recevoir des notifications importantes</small>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Mot de passe *</label>
+            <input type="password" id="password" name="password" required 
+                   placeholder="Créez un mot de passe sécurisé">
+            <small class="help-text">Au moins 6 caractères recommandés</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-user-plus"></i> S'inscrire
+            </button>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <p>Déjà un compte ? 
+                <a href="{{ url_for('login') }}" style="color: #007bff; text-decoration: none;">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter ici
+                </a>
+            </p>
+        </div>
+    </form>
+</div>
+{% endblock %}

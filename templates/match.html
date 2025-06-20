@@ -1,0 +1,782 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h2><i class="fas fa-link"></i> Correspondances Potentielles</h2>
+        <p>Objets perdus et retrouvés qui pourraient correspondre</p>
+    </div>
+
+    {% if matches %}
+        <div class="matches-container">
+            {% for lost, found, similarity in matches %}
+                <div class="match-card">
+                    <div class="match-header">
+                        <h3>Correspondance trouvée</h3>
+                        <div class="similarity-score">
+                            <span class="similarity-percentage">{{ "%.1f"|format(similarity * 100) }}%</span>
+                            <div class="similarity-bar">
+                                <div class="similarity-fill" style="width: {{ "%.1f"|format(similarity * 100) }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-content">
+                        <div class="match-item lost-match">
+                            <div class="match-label">
+                                <i class="fas fa-minus-circle"></i> Objet Perdu
+                            </div>
+                            <h4>{{ lost.title }}</h4>
+                            <p class="match-description">{{ lost.description }}</p>
+                            <div class="match-details">
+                                <p><i class="fas fa-user"></i> Par {{ lost.user.username }}</p>
+                                <p><i class="fas fa-map-marker-alt"></i> Perdu à {{ lost.location }}</p>
+                                <p><i class="fas fa-calendar"></i> Le {{ lost.date_lost.strftime('%d/%m/%Y') }}</p>
+                                <p><i class="fas fa-tag"></i> {{ lost.category }}</p>
+                                {% if lost.reward %}
+                                    <p><i class="fas fa-gift"></i> Récompense: {{ lost.reward }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="match-connector">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+
+                        <div class="match-item found-match">
+                            <div class="match-label">
+                                <i class="fas fa-plus-circle"></i> Objet Retrouvé
+                            </div>
+                            <h4>{{ found.title }}</h4>
+                            <p class="match-description">{{ found.description }}</p>
+                            <div class="match-details">
+                                <p><i class="fas fa-user"></i> Par {{ found.user.username }}</p>
+                                <p><i class="fas fa-map-marker-alt"></i> Trouvé à {{ found.location }}</p>
+                                <p><i class="fas fa-calendar"></i> Le {{ found.date_found.strftime('%d/%m/%Y') }}</p>
+                                <p><i class="fas fa-tag"></i> {{ found.category }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-actions">
+                        <button class="btn btn-primary btn-sm" 
+                                data-lost-id="{{ lost.id }}"
+                                data-found-id="{{ found.id }}"
+                                onclick="showContactInfo(this)">
+                            <i class="fas fa-envelope"></i> Voir les contacts
+                        </button>
+                        <button class="btn btn-success btn-sm" 
+                                data-lost-id="{{ lost.id }}" 
+                                data-found-id="{{ found.id }}"
+                                onclick="markAsResolved(this)">
+                            <i class="fas fa-check"></i> Marquer comme résolu
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-items">
+            <i class="fas fa-search"></i>
+            <h3>Aucune correspondance trouvée</h3>
+            <p>Il n'y a actuellement aucune correspondance entre les objets perdus et retrouvés.</p>
+            <p>Les correspondances se basent sur la catégorie et la similarité des descriptions.</p>
+            <div style="margin-top: var(--spacing-lg);">
+                <a href="{{ url_for('lost') }}" class="btn btn-warning">
+                    <i class="fas fa-minus-circle"></i> Déclarer un objet perdu
+                </a>
+                <a href="{{ url_for('found') }}" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> Déclarer un objet retrouvé
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.matches-container {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.match-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.match-header h3 {
+    color: var(--gray-800);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin: 0;
+}
+
+.similarity-score {
+    text-align: right;
+}
+
+.similarity-percentage {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--success-color);
+    display: block;
+    margin-bottom: var(--spacing-xs);
+}
+
+.similarity-bar {
+    width: 80px;
+    height: 6px;
+    background-color: var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+}
+
+.similarity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--warning-color), var(--success-color));
+    transition: width 0.3s ease;
+}
+
+.match-content {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+    margin-bottom: var(--spacing-lg);
+}
+
+.match-item {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid transparent;
+}
+
+.lost-match {
+    background-color: var(--danger-light);
+    border-color: var(--danger-color);
+}
+
+.found-match {
+    background-color: var(--success-light);
+    border-color: var(--success-color);
+}
+
+.match-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-sm);
+    color: var(--gray-700);
+}
+
+.match-label i {
+    font-size: var(--font-size-sm);
+}
+
+.match-item h4 {
+    color: var(--gray-800);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.4;
+}
+
+.match-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+    color: var(--primary-color);
+    padding: var(--spacing-sm);
+}
+
+.match-description {
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+    font-size: var(--font-size-sm);
+}
+
+.match-details p {
+    margin: var(--spacing-xs) 0;
+    font-size: var(--font-size-xs);
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.match-details i {
+    font-size: var(--font-size-xs);
+    width: 12px;
+}
+
+.match-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--gray-800);
+    font-size: var(--font-size-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    cursor: pointer;
+    color: var(--gray-500);
+    padding: var(--spacing-xs);
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--gray-800);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+}
+
+/* Contact Modal Specific Styles */
+.contact-section {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.contact-item {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+}
+
+.lost-contact {
+    background-color: var(--danger-light);
+    border-color: var(--danger-color);
+}
+
+.found-contact {
+    background-color: var(--success-light);
+    border-color: var(--success-color);
+}
+
+.contact-item h4 {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-base);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.contact-details p {
+    margin: var(--spacing-xs) 0;
+    font-size: var(--font-size-sm);
+}
+
+.contact-method {
+    background: white;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    margin-top: var(--spacing-sm);
+    border: 1px solid var(--gray-300);
+}
+
+.contact-info {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-family: monospace;
+}
+
+.contact-tips {
+    background: var(--info-light);
+    border: 1px solid var(--info-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.contact-tips h5 {
+    color: var(--info-color);
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.contact-tips ul {
+    margin: 0;
+    padding-left: var(--spacing-lg);
+}
+
+.contact-tips li {
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--info-color);
+}
+
+/* Form elements in modal */
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Loading and error states */
+.loading {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--gray-500);
+}
+
+.error-message {
+    text-align: center;
+    padding: var(--spacing-lg);
+    color: var(--danger-color);
+    background: var(--danger-light);
+    border: 1px solid var(--danger-color);
+    border-radius: var(--border-radius-md);
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    background: white;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    z-index: 1001;
+    min-width: 300px;
+    border: 1px solid var(--gray-200);
+    animation: slideIn 0.3s ease;
+}
+
+.notification-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.notification-error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.notification i {
+    font-size: var(--font-size-base);
+}
+
+.notification-success i {
+    color: var(--success-color);
+}
+
+.notification-error i {
+    color: var(--danger-color);
+}
+
+.notification button {
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    color: var(--gray-500);
+    margin-left: auto;
+    padding: 0;
+    line-height: 1;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .match-content {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .match-connector {
+        transform: rotate(90deg);
+        padding: var(--spacing-xs);
+    }
+    
+    .match-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        text-align: center;
+    }
+    
+    .similarity-score {
+        text-align: center;
+    }
+    
+    .similarity-bar {
+        margin: 0 auto;
+    }
+    
+    .modal-content {
+        margin: var(--spacing-sm);
+        max-height: 95vh;
+    }
+    
+    .contact-section {
+        gap: var(--spacing-md);
+    }
+    
+    .notification {
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
+        min-width: auto;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Contact Modal HTML
+const contactModalHTML = `
+<div id="contactModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-address-card"></i> Informations de Contact</h3>
+            <button class="modal-close" onclick="closeContactModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="contactInfo">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Chargement...
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeContactModal()">
+                <i class="fas fa-times"></i> Fermer
+            </button>
+        </div>
+    </div>
+</div>`;
+
+// Resolution Modal HTML
+const resolutionModalHTML = `
+<div id="resolutionModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-check-circle"></i> Marquer comme Résolu</h3>
+            <button class="modal-close" onclick="closeResolutionModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Confirmez-vous que cette correspondance a été résolue avec succès ?</p>
+            <div class="form-group">
+                <label for="resolutionNotes">Notes (optionnel):</label>
+                <textarea id="resolutionNotes" placeholder="Ajoutez des détails sur la résolution..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeResolutionModal()">
+                <i class="fas fa-times"></i> Annuler
+            </button>
+            <button class="btn btn-success" onclick="confirmResolution()">
+                <i class="fas fa-check"></i> Confirmer la résolution
+            </button>
+        </div>
+    </div>
+</div>`;
+
+// Add modals to page
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.insertAdjacentHTML('beforeend', contactModalHTML);
+    document.body.insertAdjacentHTML('beforeend', resolutionModalHTML);
+});
+
+let currentLostId, currentFoundId;
+
+function showContactInfo(button) {
+    const lostId = button.getAttribute('data-lost-id');
+    const foundId = button.getAttribute('data-found-id');
+    
+    // Show modal
+    document.getElementById('contactModal').style.display = 'flex';
+    
+    // Fetch contact information
+    fetch('/api/get_contact_info', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            lost_id: lostId,
+            found_id: foundId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const contactInfoDiv = document.getElementById('contactInfo');
+        
+        if (data.success) {
+            contactInfoDiv.innerHTML = `
+                <div class="contact-section">
+                    <div class="contact-item lost-contact">
+                        <h4><i class="fas fa-minus-circle"></i> Objet Perdu</h4>
+                        <div class="contact-details">
+                            <p><strong>Objet:</strong> ${data.lost_item.title}</p>
+                            <p><strong>Déclaré par:</strong> ${data.lost_item.user}</p>
+                            <p><strong>Lieu:</strong> ${data.lost_item.location}</p>
+                            <p><strong>Date:</strong> ${data.lost_item.date_lost}</p>
+                            <div class="contact-method">
+                                <p><strong>Contact via:</strong> ${data.lost_item.contact_method}</p>
+                                <p class="contact-info">${data.lost_item.contact_info}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item found-contact">
+                        <h4><i class="fas fa-plus-circle"></i> Objet Retrouvé</h4>
+                        <div class="contact-details">
+                            <p><strong>Objet:</strong> ${data.found_item.title}</p>
+                            <p><strong>Déclaré par:</strong> ${data.found_item.user}</p>
+                            <p><strong>Lieu:</strong> ${data.found_item.location}</p>
+                            <p><strong>Date:</strong> ${data.found_item.date_found}</p>
+                            <div class="contact-method">
+                                <p><strong>Contact via:</strong> ${data.found_item.contact_method}</p>
+                                <p class="contact-info">${data.found_item.contact_info}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-tips">
+                    <h5><i class="fas fa-lightbulb"></i> Conseils de Contact</h5>
+                    <ul>
+                        <li>Soyez poli et respectueux lors du contact</li>
+                        <li>Mentionnez que vous contactez via FindIt</li>
+                        <li>Demandez des détails pour vérifier l'objet</li>
+                        <li>Proposez un lieu public pour l'échange</li>
+                    </ul>
+                </div>
+            `;
+        } else {
+            contactInfoDiv.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Erreur: ${data.message}</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        document.getElementById('contactInfo').innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Erreur de connexion. Veuillez réessayer.</p>
+            </div>
+        `;
+    });
+}
+
+function closeContactModal() {
+    document.getElementById('contactModal').style.display = 'none';
+}
+
+function markAsResolved(button) {
+    currentLostId = button.getAttribute('data-lost-id');
+    currentFoundId = button.getAttribute('data-found-id');
+    
+    // Show resolution modal
+    document.getElementById('resolutionModal').style.display = 'flex';
+    document.getElementById('resolutionNotes').value = '';
+}
+
+function closeResolutionModal() {
+    document.getElementById('resolutionModal').style.display = 'none';
+    currentLostId = null;
+    currentFoundId = null;
+}
+
+function confirmResolution() {
+    const notes = document.getElementById('resolutionNotes').value;
+    
+    // Disable button to prevent double-click
+    const confirmBtn = document.querySelector('#resolutionModal .btn-success');
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+    confirmBtn.disabled = true;
+    
+    fetch('/api/mark_resolved', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            lost_id: currentLostId,
+            found_id: currentFoundId,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showNotification('success', data.message);
+            
+            // Close modal
+            closeResolutionModal();
+            
+            // Reload page to update matches
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showNotification('error', data.message);
+        }
+    })
+    .catch(error => {
+        showNotification('error', 'Erreur de connexion. Veuillez réessayer.');
+    })
+    .finally(() => {
+        // Re-enable button
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+    });
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">&times;</button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    const contactModal = document.getElementById('contactModal');
+    const resolutionModal = document.getElementById('resolutionModal');
+    
+    if (event.target === contactModal) {
+        closeContactModal();
+    }
+    if (event.target === resolutionModal) {
+        closeResolutionModal();
+    }
+});
+</script>
+{% endblock %}

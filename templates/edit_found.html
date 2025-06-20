@@ -1,0 +1,90 @@
+<!-- edit_found.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-edit"></i> Modifier l'Objet Retrouvé</h2>
+        <p>Mettez à jour les informations de l'objet retrouvé</p>
+    </div>
+
+    <form method="POST" class="enhanced-form" id="editFoundForm" onsubmit="return validateForm('editFoundForm')">
+        <div class="form-section">
+            <h3><i class="fas fa-info-circle"></i> Informations sur l'objet</h3>
+            
+            <div class="form-group">
+                <label for="title">Nom de l'objet *</label>
+                <input type="text" id="title" name="title" required value="{{ item.title }}" maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Catégorie *</label>
+                <select id="category" name="category" required>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat == item.category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description détaillée *</label>
+                <textarea id="description" name="description" required rows="4">{{ item.description }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-map-marker-alt"></i> Lieu et Date</h3>
+            
+            <div class="form-group">
+                <label for="location">Lieu où l'objet a été trouvé *</label>
+                <input type="text" id="location" name="location" required value="{{ item.location }}" maxlength="200">
+            </div>
+
+            <div class="form-group">
+                <label for="date_found">Date de découverte *</label>
+                <input type="date" id="date_found" name="date_found" required value="{{ item.date_found.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-phone"></i> Contact</h3>
+            
+            <div class="form-group">
+                <label for="contact_method">Méthode de contact *</label>
+                <select id="contact_method" name="contact_method" required>
+                    <option value="email" {% if item.contact_method == 'email' %}selected{% endif %}>Email (via la plateforme)</option>
+                    <option value="phone" {% if item.contact_method == 'phone' %}selected{% endif %}>Téléphone</option>
+                    <option value="message" {% if item.contact_method == 'message' %}selected{% endif %}>Message privé</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="contact_info">Informations de contact</label>
+                <input type="text" id="contact_info" name="contact_info" value="{{ item.contact_info or '' }}" maxlength="200">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-flag"></i> Statut</h3>
+            
+            <div class="form-group">
+                <label for="status">Statut de l'objet *</label>
+                <select id="status" name="status" required>
+                    <option value="active" {% if item.status == 'active' %}selected{% endif %}>Actif (toujours disponible)</option>
+                    <option value="resolved" {% if item.status == 'resolved' %}selected{% endif %}>Résolu (rendu au propriétaire)</option>
+                    <option value="expired" {% if item.status == 'expired' %}selected{% endif %}>Expiré (plus disponible)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success btn-large">
+                <i class="fas fa-save"></i> Sauvegarder les Modifications
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="section welcome-section">
+    <h2><i class="fas fa-home"></i> Bienvenue sur FindIt</h2>
+    
+    {% if 'user_id' in session %}
+        <div class="user-welcome">
+            <p><i class="fas fa-user"></i> Ravi de vous revoir, <strong>{{ session.get('username', 'y4nn') }}</strong> !</p>
+            <div class="quick-actions">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> Mon Tableau de Bord
+                </a>
+                <a href="{{ url_for('lost') }}" class="btn btn-warning">
+                    <i class="fas fa-minus-circle"></i> Déclarer un Objet Perdu
+                </a>
+                <a href="{{ url_for('found') }}" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> Déclarer un Objet Retrouvé
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="guest-welcome">
+            <p>Trouvez et déclarez des objets perdus facilement</p>
+            <div class="quick-actions">
+                <a href="{{ url_for('register') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> S'inscrire
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Search Section -->
+<div class="section search-section">
+    <h2><i class="fas fa-search"></i> Recherche Rapide</h2>
+    <form method="GET" action="{{ url_for('search') }}" class="search-form">
+        <div class="search-input-group">
+            <input type="text" name="q" placeholder="Rechercher un objet..." class="search-input">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Rechercher
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Recent Items Sections -->
+<div class="items-sections">
+    <!-- Lost Items -->
+    <div class="section">
+        <h3><i class="fas fa-minus-circle"></i> Objets Perdus Récents</h3>
+        {% if recent_lost_items and recent_lost_items|length > 0 %}
+            <div class="items-grid">
+                {% for item in recent_lost_items %}
+                    <div class="item-card lost-item">
+                        <div class="item-header">
+                            <h4>{{ item.title }}</h4>
+                            <span class="category-badge">{{ item.category }}</span>
+                        </div>
+                        <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                        <div class="item-details">
+                            <p><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+                            <p><i class="fas fa-calendar"></i> {{ item.date_lost.strftime('%d/%m/%Y') }}</p>
+                            {% if item.reward %}
+                                <p><i class="fas fa-gift"></i> Récompense: {{ item.reward }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="item-footer">
+                            <span class="posted-by">Par {{ item.user.username }}</span>
+                            <span class="posted-date">{{ item.date_posted.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-items">
+                <i class="fas fa-info-circle"></i>
+                <h3>Aucun objet perdu récent</h3>
+                <p>Soyez le premier à déclarer un objet perdu !</p>
+                <a href="{{ url_for('lost') }}" class="btn btn-warning">
+                    <i class="fas fa-plus"></i> Déclarer un objet perdu
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Found Items -->
+    <div class="section">
+        <h3><i class="fas fa-plus-circle"></i> Objets Retrouvés Récents</h3>
+        {% if recent_found_items and recent_found_items|length > 0 %}
+            <div class="items-grid">
+                {% for item in recent_found_items %}
+                    <div class="item-card found-item">
+                        <div class="item-header">
+                            <h4>{{ item.title }}</h4>
+                            <span class="category-badge">{{ item.category }}</span>
+                        </div>
+                        <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                        <div class="item-details">
+                            <p><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+                            <p><i class="fas fa-calendar"></i> {{ item.date_found.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="item-footer">
+                            <span class="posted-by">Par {{ item.user.username }}</span>
+                            <span class="posted-date">{{ item.date_posted.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-items">
+                <i class="fas fa-info-circle"></i>
+                <h3>Aucun objet retrouvé récent</h3>
+                <p>Aidez quelqu'un en déclarant un objet retrouvé !</p>
+                <a href="{{ url_for('found') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Déclarer un objet retrouvé
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

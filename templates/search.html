@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="section">
+    <div class="section-header">
+        <h2><i class="fas fa-search"></i> Recherche d'Objets</h2>
+        <p>Trouvez des objets perdus ou retrouvés</p>
+    </div>
+
+    <div class="search-filters">
+        <form method="GET" class="search-form-advanced">
+            <div class="search-row">
+                <div class="search-group">
+                    <label for="q">Rechercher</label>
+                    <input type="text" id="q" name="q" value="{{ query }}" 
+                           placeholder="Nom, description, lieu...">
+                </div>
+                
+                <div class="search-group">
+                    <label for="category">Catégorie</label>
+                    <select id="category" name="category">
+                        <option value="">Toutes les catégories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="search-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Rechercher
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if query or category %}
+        <div class="search-results-header">
+            <h3>Résultats de recherche</h3>
+            <p>
+                {% if query %}Recherche pour "{{ query }}"{% endif %}
+                {% if category %}{% if query %} dans la catégorie{% else %}Catégorie{% endif %} "{{ category }}"{% endif %}
+            </p>
+        </div>
+    {% endif %}
+
+    <div class="search-results">
+        {% if lost_items or found_items %}
+            <div class="results-sections">
+                {% if lost_items %}
+                    <div class="results-section">
+                        <h3><i class="fas fa-minus-circle text-red"></i> Objets Perdus ({{ lost_items|length }})</h3>
+                        <div class="items-grid">
+                            {% for item in lost_items %}
+                                <div class="item-card lost-item">
+                                    <div class="item-header">
+                                        <h4>{{ item.title }}</h4>
+                                        <span class="category-badge">{{ item.category }}</span>
+                                    </div>
+                                    <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                                    <div class="item-details">
+                                        <p><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+                                        <p><i class="fas fa-calendar"></i> Perdu le {{ item.date_lost.strftime('%d/%m/%Y') }}</p>
+                                        {% if item.reward %}
+                                            <p><i class="fas fa-gift"></i> Récompense: {{ item.reward }}</p>
+                                        {% endif %}
+                                        <p><i class="fas fa-phone"></i> Contact: {{ item.contact_method.title() }}</p>
+                                    </div>
+                                    <div class="item-footer">
+                                        <span class="posted-by">Par {{ item.user.username }}</span>
+                                        <span class="posted-date">{{ item.date_posted.strftime('%d/%m/%Y') }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if found_items %}
+                    <div class="results-section">
+                        <h3><i class="fas fa-plus-circle text-green"></i> Objets Retrouvés ({{ found_items|length }})</h3>
+                        <div class="items-grid">
+                            {% for item in found_items %}
+                                <div class="item-card found-item">
+                                    <div class="item-header">
+                                        <h4>{{ item.title }}</h4>
+                                        <span class="category-badge">{{ item.category }}</span>
+                                    </div>
+                                    <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                                    <div class="item-details">
+                                        <p><i class="fas fa-map-marker-alt"></i> {{ item.location }}</p>
+                                        <p><i class="fas fa-calendar"></i> Trouvé le {{ item.date_found.strftime('%d/%m/%Y') }}</p>
+                                        <p><i class="fas fa-phone"></i> Contact: {{ item.contact_method.title() }}</p>
+                                    </div>
+                                    <div class="item-footer">
+                                        <span class="posted-by">Par {{ item.user.username }}</span>
+                                        <span class="posted-date">{{ item.date_posted.strftime('%d/%m/%Y') }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>Aucun résultat trouvé</h3>
+                {% if query or category %}
+                    <p>Aucun objet ne correspond à vos critères de recherche.</p>
+                    <p>Essayez avec des mots-clés différents ou élargissez votre recherche.</p>
+                {% else %}
+                    <p>Utilisez le formulaire ci-dessus pour rechercher des objets.</p>
+                {% endif %}
+                
+                <div style="margin-top: var(--spacing-lg);">
+                    <a href="{{ url_for('home') }}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-filters {
+    background: var(--gray-50);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--gray-200);
+    margin-bottom: var(--spacing-lg);
+}
+
+.search-form-advanced {
+    max-width: none;
+}
+
+.search-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: var(--spacing-md);
+    align-items: end;
+}
+
+.search-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+}
+
+.search-group input,
+.search-group select {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    background-color: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-group input:focus,
+.search-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.search-results-header {
+    background: var(--primary-light);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid var(--primary-color);
+}
+
+.search-results-header h3 {
+    color: var(--gray-800);
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.search-results-header p {
+    color: var(--gray-600);
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+.results-sections {
+    display: grid;
+    gap: var(--spacing-xl);
+}
+
+.results-section {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--gray-200);
+}
+
+.results-section h3 {
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 600;
+}
+
+.results-section h3 i {
+    font-size: var(--font-size-base);
+}
+
+.no-results {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background: white;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--gray-200);
+}
+
+.no-results i {
+    font-size: var(--font-size-3xl);
+    color: var(--gray-400);
+    margin-bottom: var(--spacing-lg);
+}
+
+.no-results h3 {
+    color: var(--gray-600);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-xl);
+}
+
+.no-results p {
+    color: var(--gray-500);
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 768px) {
+    .search-row {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .search-group {
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .search-filters {
+        padding: var(--spacing-md);
+    }
+    
+    .results-section {
+        padding: var(--spacing-md);
+    }
+}
+</style>
+{% endblock %}

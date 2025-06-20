@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-minus-circle"></i> Déclarer un Objet Perdu</h2>
+        <p>Remplissez tous les détails pour aider les autres à identifier votre objet</p>
+    </div>
+
+    <form method="POST" class="enhanced-form" id="lostForm" onsubmit="return validateForm('lostForm')">
+        <div class="form-section">
+            <h3><i class="fas fa-info-circle"></i> Informations sur l'objet</h3>
+            
+            <div class="form-group">
+                <label for="title">Nom de l'objet *</label>
+                <input type="text" id="title" name="title" required 
+                       placeholder="Ex: iPhone 14, Portefeuille en cuir noir, Clés de voiture..."
+                       maxlength="100">
+                <small class="help-text">Donnez un nom court et descriptif à votre objet</small>
+            </div>
+
+            <div class="form-group">
+                <label for="category">Catégorie *</label>
+                <select id="category" name="category" required>
+                    <option value="">-- Sélectionnez une catégorie --</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <small class="help-text">Choisissez la catégorie qui correspond le mieux à votre objet</small>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description détaillée *</label>
+                <textarea id="description" name="description" required rows="4"
+                          placeholder="Décrivez votre objet en détail : couleur, marque, taille, signes distinctifs, etc."></textarea>
+                <small class="help-text">Plus votre description est précise, plus il sera facile de retrouver votre objet</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-map-marker-alt"></i> Lieu et Date</h3>
+            
+            <div class="form-group">
+                <label for="location">Lieu où l'objet a été perdu *</label>
+                <input type="text" id="location" name="location" required 
+                       placeholder="Ex: Université, Centre commercial, Bus ligne 5, Parc central..."
+                       maxlength="200">
+                <small class="help-text">Soyez aussi précis que possible sur le lieu</small>
+            </div>
+
+            <div class="form-group">
+                <label for="date_lost">Date de perte *</label>
+                <input type="date" id="date_lost" name="date_lost" required>
+                <small class="help-text">Quand avez-vous réalisé que vous aviez perdu cet objet ?</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-phone"></i> Contact</h3>
+            
+            <div class="form-group">
+                <label for="contact_method">Comment souhaitez-vous être contacté ? *</label>
+                <select id="contact_method" name="contact_method" required>
+                    <option value="email">Email (via la plateforme)</option>
+                    <option value="phone">Téléphone</option>
+                    <option value="message">Message privé</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="contact_info">Informations de contact (optionnel)</label>
+                <input type="text" id="contact_info" name="contact_info" 
+                       placeholder="Numéro de téléphone, email alternatif..."
+                       maxlength="200">
+                <small class="help-text">Laissez vide pour utiliser uniquement le système de messagerie interne</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-gift"></i> Récompense (optionnel)</h3>
+            
+            <div class="form-group">
+                <label for="reward">Récompense offerte</label>
+                <input type="text" id="reward" name="reward" 
+                       placeholder="Ex: 50€, Invitation au restaurant, Petit cadeau..."
+                       maxlength="100">
+                <small class="help-text">Une récompense peut motiver les gens à vous aider</small>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-save"></i> Déclarer l'Objet Perdu
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au Tableau de Bord
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

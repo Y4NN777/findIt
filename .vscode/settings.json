@@ -1,0 +1,10 @@
+{
+   "python.defaultInterpreterPath": "./venv/bin/python",
+   "files.associations": {
+       "*.html": "jinja-html"
+   },
+   "emmet.includeLanguages": {
+       "jinja-html": "html"
+   },
+   "html.format.templating": true
+}
